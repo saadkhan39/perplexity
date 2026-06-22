@@ -3,6 +3,7 @@ import authRoutes from "./routes/auth.routes.js"
 import cookieParser from "cookie-parser"
 import morgan from "morgan"
 import cors from "cors"
+import chatRoutes from "./routes/chat.routes.js"
 
 const app = express()
   
@@ -15,8 +16,9 @@ app.use(cors({
     methods:["GET","POST","PUT","DELETE"]
 }))
 
-
+//routes
 app.use("/api/auth",authRoutes)
+app.use("/api/chats",chatRoutes)
 
 
 
