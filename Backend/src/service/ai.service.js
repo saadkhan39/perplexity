@@ -1,6 +1,9 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import {ChatMistralAI} from "@langchain/mistralai"
-import {AIMessage, HumanMessage ,SystemMessage} from "langchain"
+import {AIMessage, HumanMessage ,SystemMessage, tool , createAgent} from "langchain"
+import * as z from "zod";
+import { searchInternet } from "./internet.service.js";
+import { sendEmail } from "./mail.service.js";
 
 const gemniModel = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash-lite",
@@ -12,17 +15,56 @@ const mistralModel = new ChatMistralAI({
     apiKey: process.env.MISTRAL_API_KEY
 })
 
+//search internet tool
+const searchInternetTool= tool(
+  searchInternet,
+  {
+        name: "searchInternet",
+        description: "Use this tool to get the latest information from the internet.",
+        schema: z.object({
+            query: z.string().describe("The search query to look up on the internet.")
+        })
+    }
+)
+
+//email tool
+const emailTool= tool(
+    sendEmail,
+    {
+       name:"emailTool",
+       description:"Use this tool to send an email",
+       schema:z.object({
+        to:z.string().describe("The recipient's email address"),
+        html:z.string().describe("The HTML content of the email"),
+        subject: z.string().describe("The subject of the email"),
+       })
+    }
+)
+
+const agent = createAgent({
+  model:mistralModel,
+  tools:[searchInternetTool,emailTool]
+})
+
 export async function generateResponse(message) {
   
-   const response = await mistralModel.invoke(message.map(msg=>{
-    if(msg.role=="user"){
-      return new HumanMessage(msg.content)
-    }else if(msg.role =="ai"){
-      return new AIMessage(msg.content)
-    }
-   }))
-  
-   return response.text
+    const response = await agent.invoke({
+        messages: [
+            new SystemMessage(`
+                You are a helpful and precise assistant for answering questions.
+                If you don't know the answer, say you don't know. 
+                If the question requires up-to-date information, use the "searchInternet" tool to get the latest information from the internet and then answer based on the search results.
+            `),
+            ...(message.map(msg => {
+                if (msg.role == "user") {
+                    return new HumanMessage(msg.content)
+                } else if (msg.role == "ai") {
+                    return new AIMessage(msg.content)
+                }
+            })) ]
+    });
+
+    return response.messages[ response.messages.length - 1 ].text;
 
 }
 

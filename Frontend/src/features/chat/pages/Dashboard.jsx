@@ -110,10 +110,10 @@ console.log("Current Chat ID:", currentChatId);
 </aside>
 
           {/* Main Content */}
-      <section className="  flex flex-1 flex-col   overflow-hidden  ">
+      <section className="  flex flex-1 flex-col max-w-3/5 mx-auto  overflow-hidden  ">
   {!(chats[currentChatId]?.messages?.length > 0) ? (
     /* Empty State */
-    <div className="flex h-full items-center justify-center px-6  lg:ml-20 w-[80%]">
+    <div className="flex h-full items-center justify-center px-6  ">
       <div className="w-full max-w-3xl">
         <div className="mb-5 text-center">
           <h1 className="text-2xl font-semibold text-white">
