@@ -14,7 +14,7 @@ const mistralModel = new ChatMistralAI({
 
 export async function generateResponse(message) {
   
-   const response = await gemniModel.invoke(message.map(msg=>{
+   const response = await mistralModel.invoke(message.map(msg=>{
     if(msg.role=="user"){
       return new HumanMessage(msg.content)
     }else if(msg.role =="ai"){

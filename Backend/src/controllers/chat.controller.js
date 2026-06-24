@@ -63,7 +63,7 @@ export async function getMessages(req, res) {
 
     if (!chat) {
         return res.status(404).json({
-            message: "Chat not found"
+            message: "Chat not found" 
         })
     }
 
