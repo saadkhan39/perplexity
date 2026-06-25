@@ -100,3 +100,18 @@ export async function deleteChat(req, res) {
         message: "Chat deleted successfully"
     })
 }
+
+export async function createNewChat(req, res) {
+  try {
+    const chat = await chatModel.create({
+      title: "New Chat",
+      messages: "new chat created ",
+    });
+
+    res.status(201).json(chat);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+}

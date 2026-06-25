@@ -132,6 +132,15 @@ export async function getMe(req,res) {
     
 }
 
+//logout controller
+export async function logout(req,res) {
+     res.clearCookie("token");
+
+    res.status(200).json({
+        message: "Logged out successfully"
+    });
+}
+
 //verify-email controller
 export async function verifyEmail(req, res) {
     const { token } = req.query;

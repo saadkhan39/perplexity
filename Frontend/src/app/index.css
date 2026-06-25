@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 html,
 body,
 #root {
@@ -11,7 +12,26 @@ body,
   box-sizing: border-box;
 }
 
-/* Chat Scrollbar */
+/* ===== DARK MODE ===== */
+
+.dark .chat-scroll::-webkit-scrollbar-thumb {
+  background: rgba(140, 227, 255, 0.25);
+}
+
+.dark .chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 227, 255, 0.5);
+}
+
+.dark .sidebar-scroll::-webkit-scrollbar-thumb {
+  background: #0d2935;
+}
+
+.dark .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: #1f5f79;
+}
+
+/* ===== LIGHT MODE ===== */
+
 .chat-scroll::-webkit-scrollbar {
   width: 6px;
 }
@@ -21,19 +41,15 @@ body,
 }
 
 .chat-scroll::-webkit-scrollbar-thumb {
-  background: rgba(140, 227, 255, 0.25);
+  background: #cbd5e1;
   border-radius: 999px;
 }
 
 .chat-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(140, 227, 255, 0.5);
+  background: #94a3b8;
 }
 
-/* Firefox */
-.chat-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(140, 227, 255, 0.25) transparent;
-}
+/* Sidebar */
 
 .sidebar-scroll::-webkit-scrollbar {
   width: 6px;
@@ -44,10 +60,23 @@ body,
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background: #0d2935;
+  background: #cbd5e1;
   border-radius: 999px;
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background: #1f5f79;
+  background: #94a3b8;
+}
+
+/* Firefox */
+
+.chat-scroll,
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark .chat-scroll,
+.dark .sidebar-scroll {
+  scrollbar-color: rgba(140, 227, 255, 0.25) transparent;
 }

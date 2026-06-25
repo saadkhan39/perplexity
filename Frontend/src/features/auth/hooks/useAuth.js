@@ -1,9 +1,12 @@
 import { useDispatch, useSelector } from "react-redux";
-import {register ,login ,getMe} from "../service/auth.api"
-import {setUser, setLoading ,setError } from "../auth.slice"
+import {register ,login ,getMe ,logout} from "../service/auth.api"
+import {setUser, setLoading ,setError,logoutUser } from "../auth.slice"
+import { useNavigate } from "react-router";
 
 
 export function useAuth(){
+
+    const navigate = useNavigate();
     const dispatch = useDispatch()
 
     async function handleRegister({email,username,password}) {
@@ -16,6 +19,7 @@ export function useAuth(){
             dispatch(setLoading(false))
         }
     }
+
      async function handleLogin({email,password}) {
         try {
             dispatch(setLoading(true))
@@ -40,7 +44,19 @@ export function useAuth(){
         }
     }
 
+
+   async function handleLogout() {
+  try {
+    await logout();
+
+ dispatch(logoutUser());
+    navigate("/login");
+  } catch (error) {
+    console.log(error);
+  }
+   }
+
     return {
-        handleRegister,handleLogin, handleGetMe
+        handleRegister,handleLogin, handleGetMe ,handleLogout
     }
 }
