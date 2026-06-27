@@ -2,7 +2,7 @@ import { io } from "socket.io-client";
 
 export const  initializeSocketConnection=(params)=> {
 
-    const socket = io("http://localhost:3000",{
+    const socket = io("https://perplexity-qfgq.onrender.com",{
         withCredentials:true
     });
 
