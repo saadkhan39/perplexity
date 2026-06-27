@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [chatInput, setChatInput] = useState("");
   const [chatToDelete, setChatToDelete] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  
 
   const fileInputRef = useRef(null);
 
@@ -24,6 +25,7 @@ const Dashboard = () => {
   const chat = useChat();
   const chats = useSelector((state) => state.chat.chats);
   const currentChatId = useSelector((state) => state.chat.currentChatId);
+  
 
   useEffect(() => {
     chat.initializeSocketConnection();
@@ -47,9 +49,11 @@ const Dashboard = () => {
     setSelectedImage(null);
   };
 
-  const openChat = (chatId) => {
-    chat.handleOpenChat(chatId, chats);
-  };
+ const openChat = async (chatId) => {
+  setSidebarOpen(false); // Close sidebar first
+
+  await chat.handleOpenChat(chatId, chats);
+};
 
   console.log("Chats:", chats);
   console.log("Current Chat ID:", currentChatId);
@@ -143,14 +147,54 @@ active:scale-95
           {/* Mobile Menu Button */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden flex items-center gap-2 rounded-3xl  px-4 py-2.5 text-sm font-semibold text-white"
+            aria-label={sidebarOpen ? "Close menu" : "Open menu"}
+            className="
+    lg:hidden
+    flex
+    m-3
+    h-11
+    w-11
+    items-center
+    justify-center
+    rounded-xl
+    border
+    border-gray-200
+    bg-white
+    shadow-sm
+    transition-all
+    duration-300
+    dark:border-white/10
+    dark:bg-[#0b1821]
+    dark:text-[#8ce3ff]
+  "
           >
-            {sidebarOpen ? "Close" : "Menu"}
+            {sidebarOpen ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-5 w-5"
+              >
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-5 w-5"
+              >
+                <path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z" />
+              </svg>
+            )}
           </button>
           {/* Sidebar */}
           <aside
-            className={`${sidebarOpen ? "block" : "hidden"
-              } lg:block h-screen w-full lg:w-[280px] bg-[#fcfcfc] border-r border-gray-200 dark:border-none dark:bg-[#0b1821] backdrop-blur-xl`}
+            className={`${
+              sidebarOpen ? "block" : "hidden"
+            } lg:block h-screen w-full overflow-x-hidden lg:w-[280px] bg-[#fcfcfc] border-r border-gray-200 dark:border-none dark:bg-[#0b1821] backdrop-blur-xl`}
           >
             <div className="flex h-full flex-col p-3">
               {/* Fixed Header */}
@@ -174,7 +218,10 @@ active:scale-95
                 </div>
 
                 <button
-                  onClick={chat.handleNewChat}
+                  onClick={() => {
+    chat.handleNewChat();
+    setSidebarOpen(false);
+  }}
                   className="mt-4 flex w-full items-center cursor-pointer  rounded text-gray-900
 dark:bg-[#0d2935]/70 bg-[#F3F3F3] shadow-[0_2px_12px_rgba(0,0,0,0.04)]  dark:text-white text-[#1111] px-2 py-1 text-sm font-semibold hover:bg-[#e7e7e7]  dark:hover:bg-[#0d2935]/90"
                 >
@@ -208,8 +255,19 @@ dark:bg-[#0d2935]/70 bg-[#F3F3F3] shadow-[0_2px_12px_rgba(0,0,0,0.04)]  dark:tex
 
                       <button
                         onClick={() => setChatToDelete(chatItem.id)}
-                        className="mr-2   cursor-pointer hidden rounded-lg p-1 text-gray-400 transition hover:bg-gray-500/20 group-hover:block"
-                      >
+  className="
+    flex
+    lg:opacity-0
+    lg:group-hover:opacity-100
+    transition-all
+    duration-200
+    px-1
+   
+    rounded
+    cursor-pointer
+    
+    
+  "                   >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-4 w-4"
@@ -260,17 +318,18 @@ dark:bg-[#0d2935]/70 bg-[#F3F3F3] shadow-[0_2px_12px_rgba(0,0,0,0.04)]  dark:tex
             </div>
           </aside>
           {/* Main Content */}
-          <section className="  flex flex-1 flex-col max-w-3/5 mx-auto  overflow-hidden  ">
+          <section className="flex flex-1 flex-col mx-auto w-full max-w-full sm:max-w-3xl lg:max-w-3xl overflow-hidden">
+            {" "}
             {!(chats[currentChatId]?.messages?.length > 0) ? (
               /* Empty State */
-              <div className="flex h-full items-center justify-center px-6  ">
+              <div className="flex h-full items-center justify-center  lg:px-6   ">
                 <div className="w-full max-w-3xl">
-                  <div className="mb-5 text-center">
-                    <h1 className="text-2xl font-semibold text-black dark:text-white">
+                  <div className="mb-5 text-center px-4 sm:px-0">
+                    <h1 className="text-xl  sm:text-2xl lg:text-2xl whitespace-nowrap font-semibold text-black dark:text-white leading-tight">
                       What are you looking for?
                     </h1>
 
-                    <p className=" text-xs dark:text-[#7da3aa]">
+                    <p className="mt-2 text-sm sm:text-base  lg:text-xs text-gray-600 dark:text-[#7da3aa] max-w-md mx-auto">
                       Ask questions, explore ideas, and get accurate answers in
                       seconds.
                     </p>
@@ -278,26 +337,36 @@ dark:bg-[#0d2935]/70 bg-[#F3F3F3] shadow-[0_2px_12px_rgba(0,0,0,0.04)]  dark:tex
 
                   <div
                     className="
-    rounded-[32px]
-    border border-gray-200
-    bg-white
-    shadow-[0_8px_24px_rgba(15,23,42,0.06)]
+  rounded-2xl
+  sm:rounded-3xl
+  lg:rounded-[32px]
+  
+w-[90%] sm:w-full
+mx-auto
+  border
+  border-gray-200
+  bg-white
+  shadow-[0_8px_24px_rgba(15,23,42,0.06)]
 
-    dark:border-none
-    dark:bg-[#08131d]
-    dark:shadow-[0_10px_35px_rgba(0,0,0,0.45)]
+  dark:border-none
+  dark:bg-[#08131d]
+  dark:shadow-[0_10px_35px_rgba(0,0,0,0.45)]
 
-    px-2.5
-    py-1.5
-    transition-all
-    duration-300
-  "
+  px-2
+  py-1
+  sm:px-2.5
+  sm:py-1.5
+  lg:px-2.5
+  lg:py-1.5
+
+ 
+"
                   >
                     {selectedImage && (
                       <div className="mb-3 relative w-fit">
                         <img
                           src={URL.createObjectURL(selectedImage)}
-                          className="h-20 rounded-xl object-cover"
+                          className="h-15 rounded-xl object-cover"
                         />
 
                         <button
@@ -314,7 +383,7 @@ dark:bg-[#0d2935]/70 bg-[#F3F3F3] shadow-[0_2px_12px_rgba(0,0,0,0.04)]  dark:tex
                       <button
                         type="button"
                         onClick={() => fileInputRef.current.click()}
-                        className="flex h-8 w-8  items-center justify-center rounded-4xl  text-gray-300 transition-all duration-200 cursor-pointer hover:bg-[#0b4f6d] hover:scale-105 active:scale-95"
+                        className="flex lg:h-8 lg:w-8 sm:h-6 sm:w-6 items-center justify-center rounded-4xl  text-gray-300 transition-all duration-200 cursor-pointer dark:hover:bg-[#042736] hover:bg-[#9e9d9d] hover:scale-105 active:scale-95"
                       >
                         <svg
                           className="h-6 w-6"
@@ -458,8 +527,8 @@ disabled:shadow-none
                   </div>
                 </div>
 
-               <div
-  className="
+                <div
+                  className="
     mb-4
     rounded-[30px]
 
@@ -482,21 +551,18 @@ bg-[#fcfcfc]
     py-1.5
 
 
-    transition-all
-    duration-300
+   
 
     
 
-    focus-within:border-[#4fa8c8]
-    focus-within:shadow-[0_0_18px_rgba(140,227,255,.15)]
   "
->
+                >
                   <div className="flex items-center gap-1 ">
                     {/* Upload Button */}
                     <button
                       type="button"
                       onClick={() => fileInputRef.current.click()}
-                      className="flex h-8 w-8 items-center justify-center rounded-4xl  text-gray-200 transition-all duration-200 cursor-pointer hover:bg-[#F3F3F3] hover:scale-105 active:scale-95"
+                      className="flex h-8 w-8 items-center justify-center rounded-4xl  text-gray-300 dark:hover:bg-[#042736] transition-all duration-200 cursor-pointer hover:bg-[#aaa9a9] hover:scale-105 active:scale-95"
                     >
                       <svg
                         className="h-6 w-6"
@@ -575,29 +641,70 @@ disabled:shadow-none
         </div>
       </div>
       {chatToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl bg-[#0b1821] p-6 shadow-2xl">
-            <h2 className="text-lg font-semibold text-white">Delete Chat?</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div
+            className="
+      w-full
+      max-w-[92%]
+      sm:max-w-sm
+      lg:max-w-md
+      rounded-2xl
+      lg:rounded-3xl
+      bg-[#0b1821]
+      p-5
+      lg:p-6
+      shadow-2xl
+    "
+          >
+            <h2 className="text-base lg:text-lg font-semibold text-white">
+              Delete Chat?
+            </h2>
 
-            <p className="mt-2 text-sm text-[#9ab7c0]">
+            <p className="mt-2 text-sm leading-6 text-[#9ab7c0]">
               This conversation will be permanently deleted and cannot be
               recovered.
             </p>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => setChatToDelete(null)}
-                className="rounded-xl border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/5"
-              >
-                Cancel
-              </button>
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button
+  onClick={() => setChatToDelete(null)}
+  className="
+    w-full
+    sm:w-auto
+    rounded-2xl
+    text-white
+    px-5
+    py-2.5
+    text-sm
+    font-medium
+    transition-all
+    duration-300
+    hover:border-[#8ce3ff]/30
+    hover:text-[#0d2935]
+    hover:text-[#8ce3ff]
+    active:scale-95
+  "
+>
+  Cancel
+</button>
 
               <button
                 onClick={async () => {
                   await chat.handleDeleteChat(chatToDelete);
                   setChatToDelete(null);
                 }}
-                className="rounded-xl  px-4 py-2 text-sm font-medium text-white hover:text-[#8ce3ff]"
+                className="
+          w-full
+          sm:w-auto
+          rounded-xl
+          px-4
+          py-2.5
+          text-sm
+          font-medium
+          text-white
+          transition-colors
+          hover:text-[#8ce3ff]
+        "
               >
                 Delete
               </button>
