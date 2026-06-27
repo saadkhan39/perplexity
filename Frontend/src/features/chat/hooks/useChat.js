@@ -1,54 +1,52 @@
 import { initializeSocketConnection } from "../service/chat.socket";
-import {
-  setChats,
-  setCurrentChatId,
-  setError,
-  setLoading,
-  createNewChat,
-  addNewMessage,
-  addMessages,
-  addChat,
-  deleteOldChat,
-} from "../chat.slice";
+import { setChats, setCurrentChatId, setError, setLoading, createNewChat , addNewMessage,addMessages,addChat,deleteOldChat,} from "../chat.slice";
 import { useDispatch } from "react-redux";
-import {
-  sendMessage,
-  getChats,
-  getMessages,
-  deleteChat,
-} from "../service/chat.api";
+import {sendMessage,getChats,getMessages,deleteChat,} from "../service/chat.api";
 
 export const useChat = () => {
   const dispatch = useDispatch();
+  
+ async function handleSendMessage({ message, chatId, image }) {
+  dispatch(setLoading(true));
 
-  async function handleSendMessage({ message, chatId }) {
-    dispatch(setLoading(true));
-    const data = await sendMessage({ message, chatId });
-    const { chat, aiMessage } = data;
-    if (!chatId)
+  try {
+    const data = await sendMessage({ message, chatId, image });
+
+    const { chat, userMessage, aiMessage } = data;
+
+    if (!chatId) {
       dispatch(
         createNewChat({
           chatId: chat._id,
           title: chat.title,
-        }),
+        })
       );
+    }
+
+    // Add ONLY the saved user message
     dispatch(
       addNewMessage({
-        chatId: chatId || chat._id,
-        content: message,
-        role: "user",
-      }),
+        chatId: chat._id,
+        content: userMessage.content,
+        image: userMessage.image,
+        role: userMessage.role,
+      })
     );
+
+    // Add AI response
     dispatch(
       addNewMessage({
-        chatId: chatId || chat._id,
+        chatId: chat._id,
         content: aiMessage.content,
         role: aiMessage.role,
-      }),
+      })
     );
-    dispatch(setCurrentChatId(chat._id));
-  }
 
+    dispatch(setCurrentChatId(chat._id));
+  } finally {
+    dispatch(setLoading(false));
+  }
+}
   async function handleGetChats() {
     dispatch(setLoading(true));
     const data = await getChats();
@@ -78,6 +76,7 @@ export const useChat = () => {
 
       const formattedMessages = messages.map((msg) => ({
         content: msg.content,
+          image: msg.image,
         role: msg.role,
       }));
 

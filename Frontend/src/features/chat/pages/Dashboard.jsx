@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useChat } from "../hooks/useChat";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuth } from "../../auth/hooks/useAuth";
@@ -11,6 +11,9 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatToDelete, setChatToDelete] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const fileInputRef = useRef(null);
 
   const auth = useAuth();
   const user = useSelector((state) => state.auth.user);
@@ -32,14 +35,16 @@ const Dashboard = () => {
 
     const trimmedMessage = chatInput.trim();
 
-    if (!trimmedMessage) return;
+    if (!trimmedMessage && !selectedImage) return;
 
     chat.handleSendMessage({
       message: trimmedMessage,
       chatId: currentChatId,
+      image: selectedImage,
     });
 
     setChatInput("");
+    setSelectedImage(null);
   };
 
   const openChat = (chatId) => {
@@ -50,15 +55,83 @@ const Dashboard = () => {
   console.log("Current Chat ID:", currentChatId);
 
   return (
-    <main className="h-screen relative overflow-hidden bg-[#F1F5F9] dark:bg-[#04070c] text-gray-900 dark:text-white transition-colors duration-300">
-      {" "}
+    <main
+      className="
+    relative h-screen overflow-hidden
+    bg-gradient-to-b
+    from-white
+    via-[#f8fafc]
+    to-[#edf2f7]
+
+    dark:bg-gradient-to-b
+    dark:from-[#03060a]
+    dark:via-[#071019]
+    dark:to-[#0b1722]
+
+    text-gray-900
+    dark:text-white
+
+    transition-all
+    duration-300
+  "
+    >
       <div className="flex items-center gap-2">
-        <div className="absolute top-2 right-3 z-50">
+        <div className="absolute top-4 right-4 z-50">
           <button
             onClick={() => dispatch(toggleTheme())}
-            className="absolute top-4 right-6 z-50 rounded-xl border border-black/10 dark:border-white/10 bg-white/5 px-2.5 py-1.5 backdrop-blur-md"
+            className="
+flex
+h-11
+w-11
+items-center
+justify-center
+rounded-xl
+
+border
+border-gray-200
+bg-white
+text-gray-700
+shadow-[0_2px_10px_rgba(15,23,42,0.08)]
+
+dark:border-[#1d3a49]
+dark:bg-[#0b1722]
+dark:text-[#8ce3ff]
+dark:shadow-[0_8px_24px_rgba(0,0,0,0.45)]
+
+transition-all
+duration-300
+
+hover:-translate-y-0.5
+hover:shadow-[0_6px_18px_rgba(15,23,42,0.12)]
+hover:border-sky-200
+
+dark:hover:bg-[#102230]
+dark:hover:border-[#2b5568]
+dark:hover:shadow-[0_12px_30px_rgba(0,0,0,0.55)]
+dark:hover:text-[#a7ecff]
+
+active:scale-95
+"
           >
-            {theme === "dark" ? "🌞" : "🌙"}
+            {theme === "dark" ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-5 w-5 text-[#8ce3ff]"
+              >
+                <path d="M12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-5 w-5 text-slate-700"
+              >
+                <path d="M10 7C10 10.866 13.134 14 17 14C18.9584 14 20.729 13.1957 21.9995 11.8995C22 11.933 22 11.9665 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C12.0335 2 12.067 2 12.1005 2.00049C10.8043 3.27098 10 5.04157 10 7Z" />
+              </svg>
+            )}
           </button>
         </div>
       </div>
@@ -76,9 +149,8 @@ const Dashboard = () => {
           </button>
           {/* Sidebar */}
           <aside
-            className={`${
-              sidebarOpen ? "block" : "hidden"
-            } lg:block h-screen w-full lg:w-[280px]  bg-white dark:bg-[#0b1821] backdrop-blur-xl`}
+            className={`${sidebarOpen ? "block" : "hidden"
+              } lg:block h-screen w-full lg:w-[280px] bg-[#fcfcfc] border-r border-gray-200 dark:border-none dark:bg-[#0b1821] backdrop-blur-xl`}
           >
             <div className="flex h-full flex-col p-3">
               {/* Fixed Header */}
@@ -96,15 +168,15 @@ const Dashboard = () => {
                     </svg>
                   </div>
 
-                  <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#222] dark:text-[#7da3aa] ">
+                  <p className="text-xl font-semibold tracking-tight  dark:text-[#F3F3F3] text-gray-900">
                     Perplexity
                   </p>
                 </div>
 
                 <button
                   onClick={chat.handleNewChat}
-                  className="mt-4 flex w-full items-center  roundedbg-gray-200 text-gray-900
-dark:bg-[#0d2935]/70 bg-[#e9e9e9] dark:text-white text-[#1111] px-2 py-1 text-sm font-semibold hover:bg-[#dddada]  dark:hover:bg-[#0d2935]/90"
+                  className="mt-4 flex w-full items-center cursor-pointer  rounded text-gray-900
+dark:bg-[#0d2935]/70 bg-[#F3F3F3] shadow-[0_2px_12px_rgba(0,0,0,0.04)]  dark:text-white text-[#1111] px-2 py-1 text-sm font-semibold hover:bg-[#e7e7e7]  dark:hover:bg-[#0d2935]/90"
                 >
                   <span className="flex h-7 w-7 items-center justify-center text-lg text-[#2eacd6] dark:text-[#8ce3ff]">
                     +
@@ -115,7 +187,7 @@ dark:bg-[#0d2935]/70 bg-[#e9e9e9] dark:text-white text-[#1111] px-2 py-1 text-sm
 
               {/* Scrollable Part */}
               <div className="mt-4 flex-1 overflow-y-auto sidebar-scroll">
-                <h2 className="mb-3 px-3 text-sm font-semibold uppercase  text-[#222]  dark:text-[#bcdee2ef]">
+                <h2 className="mb-3 px-3 text-xs font-semibold uppercase  text-[#222]  dark:text-[#bcdee2ef]">
                   Recents
                 </h2>
 
@@ -123,11 +195,11 @@ dark:bg-[#0d2935]/70 bg-[#e9e9e9] dark:text-white text-[#1111] px-2 py-1 text-sm
                   {Object.values(chats || {}).map((chatItem) => (
                     <div
                       key={chatItem.id}
-                      className="group flex items-center justify-between rounded-lg hover:bg-[#dddada] dark:hover:bg-[#0d2935]/80"
+                      className="group flex items-center justify-between rounded-lg hover:bg-[#F3F3F3] dark:hover:bg-[#0d2935]/80"
                     >
                       <button
                         onClick={() => openChat(chatItem.id)}
-                        className="flex-1 px-3 py-2 text-left text-sm dark:text-[#9ab7c0] dark:hover:text-[#9ab7c0] hover:text-[#333]"
+                        className="flex-1 px-3 py-2 text-left text-sm cursor-pointer dark:text-[#9ab7c0] dark:hover:text-[#9ab7c0] hover:text-[#333]"
                       >
                         <span className="truncate block">
                           {chatItem.title || "New Chat"}
@@ -136,7 +208,7 @@ dark:bg-[#0d2935]/70 bg-[#e9e9e9] dark:text-white text-[#1111] px-2 py-1 text-sm
 
                       <button
                         onClick={() => setChatToDelete(chatItem.id)}
-                        className="mr-2 hidden rounded-lg p-1 text-red-400 transition hover:bg-red-500/20 group-hover:block"
+                        className="mr-2   cursor-pointer hidden rounded-lg p-1 text-gray-400 transition hover:bg-gray-500/20 group-hover:block"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -158,28 +230,10 @@ dark:bg-[#0d2935]/70 bg-[#e9e9e9] dark:text-white text-[#1111] px-2 py-1 text-sm
                 </div>
               </div>
               <div className="mt-auto border-t border-black/20 dark:border-white/10 pt-4">
-                {/* <div className="mb-3 rounded-xl  flex items-center justify-between bg-[#0d2935]/50 p-3">
-   <div>
-     <p className="text-xs text-[#7da3aa]">Signed in as</p>
-
-    <p className="truncate text-xs font-medium text-white">
-      {user?.email}
-    </p>
-   </div>
-  <div>
-      <button
-    onClick={auth.handleLogout}
-    className="w-fit rounded text-sm bg-[#4B7D8F] px-2 py-1 text-white transition hover:bg-[#22657e]"
-  >
-    Logout
-  </button>
-  </div>
-  </div> */}
-
-                <div className="mt-auto rounded-2xl  dark:bg-[#0b1821]/80 p-3 backdrop-blur-md">
+                <div className="mt-auto rounded-2xl   dark:bg-[#0b1821]/80 p-3 backdrop-blur-md">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full bg-[#3333] dark:bg-[#8ce3ff] text-sm font-bold text-[#222] dark:text-[#031b24]">
+                      <div className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full bg-[#F3F3F3] dark:bg-[#8ce3ff] text-sm font-bold text-[#222] dark:text-[#031b24]">
                         {user?.email?.charAt(0).toUpperCase()}
                       </div>
 
@@ -196,7 +250,7 @@ dark:bg-[#0d2935]/70 bg-[#e9e9e9] dark:text-white text-[#1111] px-2 py-1 text-sm
 
                     <button
                       onClick={auth.handleLogout}
-                      className="rounded-xl px-3 py-2 text-xs font-medium dark:text-[#8ce3ff] text-[#222] transition hover:bg-black/9 dark:hover:bg-white/5 dark:hover:text-white"
+                      className="rounded-xl cursor-pointer px-3 py-2 text-xs font-medium dark:text-[#8ce3ff] text-[#222] transition hover:bg-black/9 dark:hover:bg-white/5 dark:hover:text-white"
                     >
                       Logout
                     </button>
@@ -222,29 +276,116 @@ dark:bg-[#0d2935]/70 bg-[#e9e9e9] dark:text-white text-[#1111] px-2 py-1 text-sm
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-3 rounded-4xl bg-white dark:bg-[#0b1821]/90 px-6 py-2 text-gray-900 dark:text-white">
-                    <input
-                      type="text"
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      placeholder="Ask anything..."
-                      className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder:text-[#7fa9af] focus:outline-none"
-                    />
+                  <div
+                    className="
+    rounded-[32px]
+    border border-gray-200
+    bg-white
+    shadow-[0_8px_24px_rgba(15,23,42,0.06)]
 
-                    <button
-                      onClick={handleSubmitMessage}
-                      disabled={!chatInput.trim()}
-                      className="flex h-8.5 w-8.5 items-center justify-center rounded-2xl bg-[#999] dark:bg-[#8ce3ff] text-[#0f0e0e] dark:text-[#031b24] transition-all duration-300 hover:scale-105 dark:hover:bg-[#7dd8ff]  hover:bg-[#5f6163] hover:text-[white] disabled:opacity-50"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="h-5 w-5"
+    dark:border-none
+    dark:bg-[#08131d]
+    dark:shadow-[0_10px_35px_rgba(0,0,0,0.45)]
+
+    px-2.5
+    py-1.5
+    transition-all
+    duration-300
+  "
+                  >
+                    {selectedImage && (
+                      <div className="mb-3 relative w-fit">
+                        <img
+                          src={URL.createObjectURL(selectedImage)}
+                          className="h-20 rounded-xl object-cover"
+                        />
+
+                        <button
+                          onClick={() => setSelectedImage(null)}
+                          className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-black text-white text-xs"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-1">
+                      {/* Upload Button */}
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current.click()}
+                        className="flex h-8 w-8  items-center justify-center rounded-4xl  text-gray-300 transition-all duration-200 cursor-pointer hover:bg-[#0b4f6d] hover:scale-105 active:scale-95"
                       >
-                        <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
-                      </svg>
-                    </button>
+                        <svg
+                          className="h-6 w-6"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M11 11V5H13V11H19V13H13V19H11V13H5V11H11Z" />
+                        </svg>
+                      </button>
+
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files.length) {
+                            setSelectedImage(e.target.files[0]);
+                          }
+                        }}
+                      />
+
+                      {/* Text Input */}
+                      <input
+                        type="text"
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleSubmitMessage();
+                          }
+                        }}
+                        placeholder="Ask anything..."
+                        className="flex-1 bg-transparent text-sm text-black dark:text-white placeholder:text-[#7fa9af] focus:outline-none"
+                      />
+
+                      {/* Send Button */}
+                      <button
+                        type="button"
+                        onClick={handleSubmitMessage}
+                        disabled={!chatInput.trim() && !selectedImage}
+                        className="
+flex
+h-10
+w-10
+items-center
+justify-center
+rounded-full
+bg-[#8ce3ff]
+text-[#05222c]
+transition-all
+duration-300
+hover:scale-105
+hover:bg-[#74dcff]
+active:scale-95
+disabled:opacity-40
+cursor-pointer
+disabled:shadow-none
+"
+                      >
+                        <svg
+                          className="h-5 w-5"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -258,40 +399,52 @@ dark:bg-[#0d2935]/70 bg-[#e9e9e9] dark:text-white text-[#1111] px-2 py-1 text-sm
                         key={message.id}
                         className={
                           message.role === "user"
-                            ? "ml-auto w-fit max-w-[75%] rounded-[28px] bg-[#b1b1b166] dark:bg-[#0d2836]/95 px-5 py-2"
-                            : "w-fit max-w-[75%] px-5 py-4"
+                            ? "ml-auto max-w-[75%] rounded-3xl bg-[#F3F3F3]  dark:bg-[#0d2836]/95 px-3 py-2"
+                            : "max-w-[75%] rounded-3xl p-4"
                         }
                       >
+                        {/* Display uploaded image */}
+                        {message.image && (
+                          <img
+                            src={message.image}
+                            alt="Uploaded"
+                            className="mb-3 max-h-72 w-auto rounded-2xl object-cover"
+                          />
+                        )}
+
+                        {/* User message */}
                         {message.role === "user" ? (
-                          <p className="text-sm text-[#111] dark:text-[#d6f3ff]">
-                            {message.content}
-                          </p>
+                          message.content && (
+                            <p className="text-sm   dark:text-[#d6f3ff]">
+                              {message.content}
+                            </p>
+                          )
                         ) : (
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
                               p: ({ children }) => (
-                                <p className="mb-2 text-sm text-[#111] dark:text-[#d6f3ff]">
+                                <p className="mb-2 text-sm  dark:text-[#d6f3ff]">
                                   {children}
                                 </p>
                               ),
                               ul: ({ children }) => (
-                                <ul className="list-disc pl-5 text-sm  text-[#111] dark:text-[#d6f3ff]">
+                                <ul className="list-disc pl-5 text-sm dark:text-[#d6f3ff]">
                                   {children}
                                 </ul>
                               ),
                               ol: ({ children }) => (
-                                <ol className="list-decimal pl-5 text-sm  text-[#111] dark:text-[#d6f3ff]">
+                                <ol className="list-decimal pl-5 text-sm dark:text-[#d6f3ff]">
                                   {children}
                                 </ol>
                               ),
                               code: ({ children }) => (
-                                <code className="rounded bg-[#ffffff66] dark:bg-black/30 px-1 py-0.5">
+                                <code className="rounded bg-black/30 px-1 py-0.5">
                                   {children}
                                 </code>
                               ),
                               pre: ({ children }) => (
-                                <pre className="overflow-x-auto rounded-xl  bg-[#b8b1b166] dark:bg-black/40 p-3">
+                                <pre className="overflow-x-auto rounded-xl bg-black/40 p-3">
                                   {children}
                                 </pre>
                               ),
@@ -305,39 +458,111 @@ dark:bg-[#0d2935]/70 bg-[#e9e9e9] dark:text-white text-[#1111] px-2 py-1 text-sm
                   </div>
                 </div>
 
-                <div className="px-6 pb-4">
-                  <div className="flex items-center gap-3 rounded-3xl bg-[#b1b1b166]  dark:bg-[#0b1821]/90 px-5 py-1.5">
+               <div
+  className="
+    mb-4
+    rounded-[30px]
+
+   border
+border-gray-200
+
+dark:border-[#1f3f52]
+
+  dark:[bg-gradient-to-b
+    from-[#0f1d28]
+    via-[#0d1822]
+    to-[#0b141c]
+]
+    dark:bg-[#0d1822]
+
+bg-[#fcfcfc]
+    backdrop-blur-xl
+
+    px-2.5
+    py-1.5
+
+
+    transition-all
+    duration-300
+
+    
+
+    focus-within:border-[#4fa8c8]
+    focus-within:shadow-[0_0_18px_rgba(140,227,255,.15)]
+  "
+>
+                  <div className="flex items-center gap-1 ">
+                    {/* Upload Button */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current.click()}
+                      className="flex h-8 w-8 items-center justify-center rounded-4xl  text-gray-200 transition-all duration-200 cursor-pointer hover:bg-[#F3F3F3] hover:scale-105 active:scale-95"
+                    >
+                      <svg
+                        className="h-6 w-6"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M11 11V5H13V11H19V13H13V19H11V13H5V11H11Z" />
+                      </svg>
+                    </button>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files.length) {
+                          setSelectedImage(e.target.files[0]);
+                        }
+                      }}
+                    />
+
+                    {/* Text Input */}
                     <input
                       type="text"
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleSubmitMessage();
+                        }
+                      }}
                       placeholder="Ask anything..."
-                      className="flex-1 bg-transparent text-sm text-black dark:text-white placeholder:text-[#202525] dark:placeholder:text-[#7fa9af] focus:outline-none"
+                      className="flex-1 bg-transparent text-sm text-white placeholder:text-[#7fa9af] focus:outline-none"
                     />
 
+                    {/* Send Button */}
                     <button
+                      type="button"
                       onClick={handleSubmitMessage}
-                      disabled={!chatInput.trim()}
+                      disabled={!chatInput.trim() && !selectedImage}
                       className="
-flex h-8.5 w-8.5 items-center justify-center
-rounded-2xl
-bg-[#969696] text-white
-hover:bg-[#7a7a7a]
-
-dark:bg-[#8ce3ff]
-dark:text-[#031b24]
-dark:hover:bg-[#7dd8ff]
-
-transition-all duration-300
+flex
+h-10
+w-10
+items-center
+justify-center
+rounded-full
+bg-[#8ce3ff]
+text-[#05222c]
+transition-all
+duration-300
 hover:scale-105
-disabled:opacity-50
+hover:bg-[#74dcff]
+active:scale-95
+disabled:opacity-40
+cursor-pointer
+disabled:shadow-none
 "
                     >
                       <svg
+                        className="h-5 w-5"
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill="currentColor"
-                        className="h-5 w-5"
                       >
                         <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
                       </svg>
@@ -372,7 +597,7 @@ disabled:opacity-50
                   await chat.handleDeleteChat(chatToDelete);
                   setChatToDelete(null);
                 }}
-                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
+                className="rounded-xl  px-4 py-2 text-sm font-medium text-white hover:text-[#8ce3ff]"
               >
                 Delete
               </button>

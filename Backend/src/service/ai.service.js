@@ -1,71 +1,91 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import {ChatMistralAI} from "@langchain/mistralai"
-import {AIMessage, HumanMessage ,SystemMessage, tool , createAgent} from "langchain"
+import { ChatMistralAI } from "@langchain/mistralai";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+  tool,
+  createAgent,
+} from "langchain";
 import * as z from "zod";
+
 import { searchInternet } from "./internet.service.js";
 import { sendEmail } from "./mail.service.js";
 
-const gemniModel = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash-lite",
-  apiKey: process.env.GEMNI_API_KEY
+const geminiModel = new ChatGoogleGenerativeAI({
+  model: "gemini-2.5-flash",
+  apiKey: process.env.GEMNI_API_KEY,
 });
 
 const mistralModel = new ChatMistralAI({
-    model: "mistral-small-latest",
-    apiKey: process.env.MISTRAL_API_KEY
-})
+  model: "mistral-small-latest",
+  apiKey: process.env.MISTRAL_API_KEY,
+});
 
-//search internet tool
-const searchInternetTool= tool(
-  searchInternet,
-  {
-        name: "searchInternet",
-        description: "Use this tool to get the latest information from the internet.",
-        schema: z.object({
-            query: z.string().describe("The search query to look up on the internet.")
-        })
-    }
-)
+const searchInternetTool = tool(searchInternet, {
+  name: "searchInternet",
+  description: "Search latest information from internet",
+  schema: z.object({
+    query: z.string(),
+  }),
+});
 
-//email tool
-const emailTool= tool(
-    sendEmail,
-    {
-       name:"emailTool",
-       description:"Use this tool to send an email",
-       schema:z.object({
-        to:z.string().describe("The recipient's email address"),
-        html:z.string().describe("The HTML content of the email"),
-        subject: z.string().describe("The subject of the email"),
-       })
-    }
-)
+const emailTool = tool(sendEmail, {
+  name: "emailTool",
+  description: "Send email",
+  schema: z.object({
+    to: z.string(),
+    subject: z.string(),
+    html: z.string(),
+  }),
+});
 
 const agent = createAgent({
-  model:mistralModel,
-  tools:[searchInternetTool,emailTool]
-})
+  model: mistralModel,
+  tools: [searchInternetTool, emailTool],
+});
 
-export async function generateResponse(message) {
-  
-    const response = await agent.invoke({
-        messages: [
-            new SystemMessage(`
-                You are a helpful and precise assistant for answering questions.
-                If you don't know the answer, say you don't know. 
-                If the question requires up-to-date information, use the "searchInternet" tool to get the latest information from the internet and then answer based on the search results.
-            `),
-            ...(message.map(msg => {
-                if (msg.role == "user") {
-                    return new HumanMessage(msg.content)
-                } else if (msg.role == "ai") {
-                    return new AIMessage(msg.content)
-                }
-            })) ]
-    });
+export async function generateResponse(messages, image) {
+  // IMAGE + TEXT
+  if (image) {
+    const prompt =
+      messages[messages.length - 1]?.content || "Describe this image.";
 
-    return response.messages[ response.messages.length - 1 ].text;
+    const response = await geminiModel.invoke([
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: prompt,
+          },
+          {
+            type: "image_url",
+            image_url: `data:${image.mimetype};base64,${image.buffer.toString("base64")}`,
+          },
+        ],
+      }),
+    ]);
 
+    return response.text;
+  }
+
+  // TEXT ONLY
+  const response = await agent.invoke({
+    messages: [
+      new SystemMessage(`
+You are a helpful AI assistant.
+If latest information is required, use searchInternet tool.
+      `),
+
+      ...messages.map((msg) =>
+        msg.role === "user"
+          ? new HumanMessage(msg.content)
+          : new AIMessage(msg.content),
+      ),
+    ],
+  });
+
+  return response.messages[response.messages.length - 1].text;
 }
 
 export async function generateChatTitle(message) {
@@ -78,11 +98,11 @@ export async function generateChatTitle(message) {
       give user a quick understanding of the chat's topic .
      `),
 
-     new HumanMessage(`
+    new HumanMessage(`
       Generate a title for a chat conversation based on the following first message:
       ${message}
-      `)
-  ])
+      `),
+  ]);
 
-   return response.text;
+  return response.text;
 }

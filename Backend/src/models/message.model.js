@@ -8,8 +8,9 @@ const messageSchema = new mongoose.Schema({
     },
     content:{
         type:String,
-        required:true
+         default: ""
     },
+    image:String,
     role:{
         type:String,
         enum:["user", "ai"],
